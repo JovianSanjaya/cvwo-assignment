@@ -27,6 +27,7 @@ func InitConnDB() {
 
 }
 
+// this one need change
 func CreateTables() {
 	topicsQuery := `
     CREATE TABLE IF NOT EXISTS topics (
@@ -45,6 +46,8 @@ func CreateTables() {
     CREATE TABLE IF NOT EXISTS posts (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
+		content TEXT NOT NULL,
+		topic_id INTEGER REFERENCES topics(id),
 		time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );`
 
@@ -53,4 +56,19 @@ func CreateTables() {
 		log.Fatal(errPosts)
 	}
 	log.Println("Table posts created")
+
+	commentsQuery := `
+    	CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        content TEXT NOT NULL,
+        post_id INTEGER REFERENCES posts(id),
+        time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );`
+
+	_, errComments := DB.Exec(commentsQuery)
+	if errComments != nil {
+		log.Fatal(errComments)
+	}
+	log.Println("Table comments created")
+
 }

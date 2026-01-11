@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/JovianSanjaya/cvwo-assignment/db"
@@ -51,13 +52,16 @@ func CreateTopics(w http.ResponseWriter, r *http.Request) {
 	err := db.DB.QueryRow("INSERT INTO topics (title) VALUES ($1) RETURNING id", req.Title).Scan(&newID)
 
 	if err != nil {
-		http.Error(w, "Error in inserting new topics to database", 500)
+		fmt.Printf("Database error in CreateTopics: %v\n", err)
+		http.Error(w, fmt.Sprintf("Error in inserting new topics to database: %v", err), 500)
 		return
 	}
 
 	resp := models.CreateTopicResponse{
 		ID: newID,
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		http.Error(w, "Error in writing response when creating new topics", 500)

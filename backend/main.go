@@ -33,8 +33,18 @@ func main() {
 
 	r.Get("/topics", handlers.GetTopics)
 
+	r.Get("/topics/{topicID}/posts", handlers.GetPostsByTopic)
+
+	r.Get("/topics/{topicID}/posts/{postID}/comments", handlers.GetCommentsByPost)
+
 	r.Post("/topics", handlers.CreateTopics)
 
+	r.Post("/topics/{topicID}/posts", handlers.CreatePosts)
+
+	r.Post("/topics/{topicID}/posts/{postID}/comments", handlers.CreateComments)
+
 	log.Println("Server starting on port 8080...")
-	http.ListenAndServe(":8080", r)
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		log.Fatal(err)
+	}
 }
