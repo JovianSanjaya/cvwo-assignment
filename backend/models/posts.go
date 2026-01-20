@@ -6,7 +6,8 @@ type Post struct {
 	ID          int       `json:"id"`
 	Title       string    `json:"title"`
 	Content     string    `json:"content"`
-	Topic       int       `json:"topic_id"`
+	TopicID     int       `json:"topic_id"`
+	UserID      int       `json:"user_id"`
 	TimeCreated time.Time `json:"time_created"`
 }
 

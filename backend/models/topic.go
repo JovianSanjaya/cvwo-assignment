@@ -5,6 +5,7 @@ import "time"
 type Topic struct {
 	ID          int       `json:"id"`
 	Title       string    `json:"title"`
+	UserID      int       `json:"user_id"`
 	TimeCreated time.Time `json:"time_created"`
 }
 

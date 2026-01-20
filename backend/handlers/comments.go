@@ -13,7 +13,7 @@ func GetCommentsByPost(w http.ResponseWriter, r *http.Request) {
 
 	postID := chi.URLParam(r, "postID")
 
-	rows, err := db.DB.Query("SELECT id, content, post_id, time_created FROM comments WHERE post_id = $1", postID)
+	rows, err := db.DB.Query("SELECT id, content, post_id, user_id, time_created FROM comments WHERE post_id = $1", postID)
 
 	if err != nil {
 		http.Error(w, "Error in getting comments from database", 500)
@@ -27,7 +27,7 @@ func GetCommentsByPost(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var c models.Comments
 
-		if err := rows.Scan(&c.ID, &c.Content, &c.Post, &c.TimeCreated); err != nil {
+		if err := rows.Scan(&c.ID, &c.Content, &c.PostID, &c.UserID, &c.TimeCreated); err != nil {
 			http.Error(w, "Error scanning comment", 500)
 			return
 		}
@@ -70,4 +70,62 @@ func CreateComments(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		http.Error(w, "Error in writing response when creating new comments", 500)
 	}
+}
+
+func UpdateComments(w http.ResponseWriter, r *http.Request) {
+	commentID := chi.URLParam(r, "commentID")
+	userID := r.Context().Value("user_id").(int)
+
+	var req models.CreateCommentRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Error reading comment input", 500)
+		return
+	}
+
+	var ownerID int
+	err := db.DB.QueryRow("SELECT user_id FROM comments WHERE id = $1", commentID).Scan(&ownerID)
+
+	if err != nil {
+		http.Error(w, "Comment not found", 404)
+		return
+	}
+
+	if ownerID != userID {
+		http.Error(w, "Unauthorized to edit this comment", 403)
+		return
+	}
+
+	_, err = db.DB.Exec("UPDATE comments SET content = $1 WHERE id = $2", req.Content, commentID)
+	if err != nil {
+		http.Error(w, "Error updating comment", 500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+}
+
+func DeleteComments(w http.ResponseWriter, r *http.Request) {
+	commentID := chi.URLParam(r, "commentID")
+	userID := r.Context().Value("user_id").(int)
+
+	var ownerID int
+	err := db.DB.QueryRow("SELECT user_id FROM comments WHERE id = $1", commentID).Scan(&ownerID)
+
+	if err != nil {
+		http.Error(w, "Comment not found", 404)
+		return
+	}
+
+	if ownerID != userID {
+		http.Error(w, "Unauthorized to delete this comment", 403)
+		return
+	}
+
+	_, err = db.DB.Exec("DELETE FROM comments WHERE id = $1", commentID)
+	if err != nil {
+		http.Error(w, "Error deleting comment", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 }

@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"log"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -12,7 +13,7 @@ var DB *sql.DB
 func InitConnDB() {
 	var err error
 
-	conn := "user=postgres password=jovian_s.p140204 dbname=cvwo sslmode=disable"
+	conn := os.Getenv("DATABASE_URL")
 	DB, err = sql.Open("postgres", conn)
 
 	if err != nil {
@@ -27,14 +28,28 @@ func InitConnDB() {
 
 }
 
-// this one need change
 func CreateTables() {
-	topicsQuery := `
-    CREATE TABLE IF NOT EXISTS topics (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
+	userQuery := `
+	CREATE TABLE IF NOT EXISTS users (
+		id SERIAL PRIMARY KEY,
+		username VARCHAR(255) UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL,
+		role VARCHAR(50) DEFAULT 'user',
 		time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );`
+	);`
+	_, errUser := DB.Exec(userQuery)
+	if errUser != nil {
+		log.Fatal(errUser)
+	}
+	log.Println("Users table created")
+
+	topicsQuery := `
+	CREATE TABLE IF NOT EXISTS topics (
+		id SERIAL PRIMARY KEY,
+		title TEXT NOT NULL,
+		user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+		time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+	);`
 
 	_, errTopics := DB.Exec(topicsQuery)
 	if errTopics != nil {
@@ -43,32 +58,50 @@ func CreateTables() {
 	log.Println("Table topics created")
 
 	postsQuery := `
-    CREATE TABLE IF NOT EXISTS posts (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
+	CREATE TABLE IF NOT EXISTS posts (
+		id SERIAL PRIMARY KEY,
+		title TEXT NOT NULL,
 		content TEXT NOT NULL,
-		topic_id INTEGER REFERENCES topics(id),
+		topic_id INTEGER REFERENCES topics(id) ON DELETE CASCADE,
+		user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,	
 		time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );`
+	);`
 
 	_, errPosts := DB.Exec(postsQuery)
 	if errPosts != nil {
 		log.Fatal(errPosts)
 	}
-	log.Println("Table posts created")
+	log.Println(" Posts table created")
 
 	commentsQuery := `
-    	CREATE TABLE IF NOT EXISTS comments (
-        id SERIAL PRIMARY KEY,
-        content TEXT NOT NULL,
-        post_id INTEGER REFERENCES posts(id),
-        time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    );`
+	CREATE TABLE IF NOT EXISTS comments (
+		id SERIAL PRIMARY KEY,
+		content TEXT NOT NULL,
+		post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+		user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,	
+		time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+	);`
 
 	_, errComments := DB.Exec(commentsQuery)
 	if errComments != nil {
 		log.Fatal(errComments)
 	}
-	log.Println("Table comments created")
+	log.Println("Comments table created")
+
+	votesQuery := `
+	CREATE TABLE IF NOT EXISTS votes (
+		id SERIAL PRIMARY KEY,
+		user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+		post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+		comment_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,	
+		vote_type INTEGER NOT NULL,
+		time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	_, errVotes := DB.Exec(votesQuery)
+	if errVotes != nil {
+		log.Fatal(errVotes)
+	}
+	log.Println("Table votes created")
 
 }

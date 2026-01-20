@@ -5,7 +5,8 @@ import "time"
 type Comments struct {
 	ID          int       `json:"id"`
 	Content     string    `json:"content"`
-	Post        int       `json:"post_id"`
+	PostID      int       `json:"post_id"`
+	UserID      int       `json:"user_id"`
 	TimeCreated time.Time `json:"time_created"`
 }
 

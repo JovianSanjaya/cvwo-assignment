@@ -6,17 +6,21 @@ import (
 
 	"github.com/JovianSanjaya/cvwo-assignment/db"
 	"github.com/JovianSanjaya/cvwo-assignment/handlers"
+	"github.com/JovianSanjaya/cvwo-assignment/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
+
 	db.InitConnDB()
 	db.CreateTables()
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(chimiddleware.Logger)
 
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"},
@@ -28,22 +32,35 @@ func main() {
 	}))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World!"))
+		w.Write([]byte("Square Forum API"))
 	})
 
+	//Public routes
+	r.Post("/auth/register", handlers.Register)
+	r.Post("/auth/login", handlers.Login)
 	r.Get("/topics", handlers.GetTopics)
-
 	r.Get("/topics/{topicID}/posts", handlers.GetPostsByTopic)
-
 	r.Get("/topics/{topicID}/posts/{postID}/comments", handlers.GetCommentsByPost)
 
-	r.Post("/topics", handlers.CreateTopics)
+	//Protected routes
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.Auth)
+		r.Get("/auth/me", handlers.GetMe)
+		r.Post("/topics", handlers.CreateTopics)
+		r.Post("/topics/{topicID}/posts", handlers.CreatePosts)
+		r.Post("/topics/{topicID}/posts/{postID}/comments", handlers.CreateComments)
 
-	r.Post("/topics/{topicID}/posts", handlers.CreatePosts)
+		r.Put("/topics/{topicID}", handlers.UpdateTopic)
+		r.Delete("/topics/{topicID}", handlers.DeleteTopic)
 
-	r.Post("/topics/{topicID}/posts/{postID}/comments", handlers.CreateComments)
+		r.Put("/topics/{topicID}/posts/{postID}", handlers.UpdatePosts)
+		r.Delete("/topics/{topicID}/posts/{postID}", handlers.DeletePosts)
 
-	log.Println("Server starting on port 8080...")
+		r.Put("/topics/{topicID}/posts/{postID}/comments/{commentID}", handlers.UpdateComments)
+		r.Delete("/topics/{topicID}/posts/{postID}/comments/{commentID}", handlers.DeleteComments)
+	})
+
+	log.Println("Server starting on port 8080")
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatal(err)
 	}
