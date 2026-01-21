@@ -46,18 +46,21 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.Auth)
 		r.Get("/auth/me", handlers.GetMe)
-		r.Post("/topics", handlers.CreateTopics)
-		r.Post("/topics/{topicID}/posts", handlers.CreatePosts)
-		r.Post("/topics/{topicID}/posts/{postID}/comments", handlers.CreateComments)
 
+		r.Post("/topics", handlers.CreateTopics)
 		r.Put("/topics/{topicID}", handlers.UpdateTopic)
 		r.Delete("/topics/{topicID}", handlers.DeleteTopic)
 
+		r.Post("/topics/{topicID}/posts", handlers.CreatePosts)
 		r.Put("/topics/{topicID}/posts/{postID}", handlers.UpdatePosts)
 		r.Delete("/topics/{topicID}/posts/{postID}", handlers.DeletePosts)
 
+		r.Post("/topics/{topicID}/posts/{postID}/comments", handlers.CreateComments)
 		r.Put("/topics/{topicID}/posts/{postID}/comments/{commentID}", handlers.UpdateComments)
 		r.Delete("/topics/{topicID}/posts/{postID}/comments/{commentID}", handlers.DeleteComments)
+
+		r.Post("/posts/{postID}/vote", handlers.VotePosts)
+		r.Post("/comments/{commentID}/vote", handlers.VoteComments)
 	})
 
 	log.Println("Server starting on port 8080")
