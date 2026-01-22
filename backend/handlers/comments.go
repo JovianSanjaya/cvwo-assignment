@@ -13,7 +13,11 @@ func GetCommentsByPost(w http.ResponseWriter, r *http.Request) {
 
 	postID := chi.URLParam(r, "postID")
 
-	rows, err := db.DB.Query("SELECT id, content, post_id, user_id, time_created FROM comments WHERE post_id = $1", postID)
+	rows, err := db.DB.Query(`
+		SELECT comments.id, comments.content, comments.post_id, comments.user_id, comments.time_created, users.username 
+		FROM comments 
+		JOIN users ON comments.user_id = users.id 
+		WHERE comments.post_id = $1`, postID)
 
 	if err != nil {
 		http.Error(w, "Error in getting comments from database", 500)
@@ -27,13 +31,12 @@ func GetCommentsByPost(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var c models.Comments
 
-		if err := rows.Scan(&c.ID, &c.Content, &c.PostID, &c.UserID, &c.TimeCreated); err != nil {
+		if err := rows.Scan(&c.ID, &c.Content, &c.PostID, &c.UserID, &c.TimeCreated, &c.Username); err != nil {
 			http.Error(w, "Error scanning comment", 500)
 			return
 		}
 
 		comments = append(comments, c)
-
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -52,9 +55,10 @@ func CreateComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := r.Context().Value("user_id").(int)
 	var newID int
 
-	err := db.DB.QueryRow("INSERT INTO comments (content, post_id) VALUES ($1, $2) RETURNING id", req.Content, postID).Scan(&newID)
+	err := db.DB.QueryRow("INSERT INTO comments (content, post_id, user_id) VALUES ($1, $2, $3) RETURNING id", req.Content, postID, userID).Scan(&newID)
 
 	if err != nil {
 		http.Error(w, "Error in inserting new comments to database", 500)

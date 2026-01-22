@@ -66,6 +66,20 @@ func GetPostsByTopic(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func GetPost(w http.ResponseWriter, r *http.Request) {
+	postID := chi.URLParam(r, "postID")
+	var p models.Post
+	err := db.DB.QueryRow("SELECT id, title, content, topic_id, user_id, time_created FROM posts WHERE id = $1", postID).Scan(&p.ID, &p.Title, &p.Content, &p.TopicID, &p.UserID, &p.TimeCreated)
+	if err != nil {
+		http.Error(w, "Post not found", 404)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(p); err != nil {
+		http.Error(w, "Error writing response when getting post", 500)
+	}
+}
+
 func CreatePosts(w http.ResponseWriter, r *http.Request) {
 	topicID := chi.URLParam(r, "topicID")
 	var req models.CreatePostRequest
@@ -75,9 +89,10 @@ func CreatePosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := r.Context().Value("user_id").(int)
 	var newID int
 
-	err := db.DB.QueryRow("INSERT INTO posts (title, content, topic_id) VALUES ($1, $2, $3) RETURNING id", req.Title, req.Content, topicID).Scan(&newID)
+	err := db.DB.QueryRow("INSERT INTO posts (title, content, topic_id, user_id) VALUES ($1, $2, $3, $4) RETURNING id", req.Title, req.Content, topicID, userID).Scan(&newID)
 
 	if err != nil {
 		http.Error(w, "Error in inserting new posts to database", 500)

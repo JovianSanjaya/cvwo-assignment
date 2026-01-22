@@ -1,18 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { colors } from '../theme/colors';
-import { apiFetch, getToken, removeToken } from '../services/api';
+import { apiFetch } from '../services/api';
+import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
+import { formatTimeAgo } from '../utils/timeAgo';
 
 interface Topic {
     id: number;
     title: string;
+    user_id: number;
     time_created: string;
 }
 
 function Home() {
     const [topics, setTopics] = useState<Topic[]>([]);
     const [title, setTitle] = useState("");
-    const isLoggedIn = !!getToken();
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const { isLoggedIn, user } = useAuth();
+    const currentUserID = user?.id;
 
     useEffect(() => {
         fetch('http://localhost:8080/topics')
@@ -35,6 +43,7 @@ function Home() {
             const newTopic: Topic = {
                 id: data.id,
                 title: title,
+                user_id: currentUserID || 0,
                 time_created: "Just Now",
             };
             setTopics([...topics, newTopic]);
@@ -42,9 +51,31 @@ function Home() {
         }
     }
 
-    function handleLogout() {
-        removeToken();
-        window.location.reload();
+    async function handleDelete(topicID: number) {
+        if (!confirm("Are you sure you want to delete this topic?")) return;
+
+        await apiFetch(`/topics/${topicID}`, {
+            method: 'DELETE',
+        });
+
+        setTopics(topics.filter(topic => topic.id !== topicID));
+    }
+
+    async function handleEdit(topicId: number) {
+        if (!editTitle.trim()) return;
+
+        const response = await apiFetch(`/topics/${topicId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ title: editTitle }),
+        });
+
+        if (response.ok) {
+            setTopics(topics.map(t =>
+                t.id === topicId ? { ...t, title: editTitle } : t
+            ));
+            setEditingId(null);
+            setEditTitle("");
+        }
     }
 
     return (
@@ -53,60 +84,32 @@ function Home() {
             backgroundColor: colors.background,
             fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         }}>
-            {/* Header */}
-            <header style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px 40px',
-                borderBottom: `1px solid ${colors.border}`,
-                backgroundColor: '#FFFFFF',
-            }}>
-                <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>
-                    <span style={{ color: colors.text }}>Sq</span>
-                    <span style={{ color: colors.primary }}>U</span>
-                    <span style={{ color: colors.text }}>are</span>
-                </h1>
+            <Navbar />
 
-                {isLoggedIn ? (
-                    <button
-                        onClick={handleLogout}
-                        style={{
-                            padding: '8px 20px',
-                            borderRadius: 8,
-                            backgroundColor: colors.cardBg,
-                            color: colors.text,
-                            border: `1px solid ${colors.border}`,
-                            cursor: 'pointer',
-                            fontWeight: 500,
-                        }}
-                    >
-                        Logout
-                    </button>
-                ) : (
-                    <Link
-                        to="/login"
-                        style={{
-                            padding: '8px 20px',
-                            borderRadius: 8,
-                            backgroundColor: colors.primary,
-                            color: '#fff',
-                            textDecoration: 'none',
-                            fontWeight: 500,
-                        }}
-                    >
-                        Login
-                    </Link>
-                )}
-            </header>
-
-            {/* Main Content */}
-            <main style={{ maxWidth: 800, margin: '0 auto', padding: 40 }}>
+            <main style={{ maxWidth: 800, margin: '0 auto', padding: '100px 40px 40px 40px' }}>
                 <h2 style={{ color: colors.text, fontSize: 28, fontWeight: 700, marginBottom: 24 }}>
                     Forum Topics
                 </h2>
 
-                {/* Create Topic Form */}
+                <div style={{ marginBottom: 24 }}>
+                    <input
+                        type="text"
+                        placeholder="Search topics..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '12px 16px',
+                            borderRadius: 12,
+                            border: `1px solid ${colors.border}`,
+                            fontSize: 16,
+                            backgroundColor: '#fff',
+                            boxSizing: 'border-box',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                        }}
+                    />
+                </div>
+
                 {isLoggedIn && (
                     <form onSubmit={handleSubmit} style={{ marginBottom: 32 }}>
                         <div style={{ display: 'flex', gap: 12 }}>
@@ -142,29 +145,103 @@ function Home() {
                     </form>
                 )}
 
-                {/* Topics List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {topics.map(topic => (
-                        <Link
-                            key={topic.id}
-                            to={`/topics/${topic.id}/posts`}
-                            style={{
-                                padding: 20,
-                                borderRadius: 12,
-                                backgroundColor: '#FFFFFF',
-                                border: `1px solid ${colors.border}`,
-                                textDecoration: 'none',
-                                transition: 'box-shadow 0.2s',
-                            }}
-                        >
-                            <h3 style={{ color: colors.text, fontSize: 18, fontWeight: 600, margin: 0 }}>
-                                {topic.title}
-                            </h3>
-                            <p style={{ color: colors.muted, fontSize: 14, margin: '8px 0 0 0' }}>
-                                {topic.time_created}
-                            </p>
-                        </Link>
-                    ))}
+                    {topics
+                        .filter(topic => topic.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map(topic => (
+                            <div
+                                key={topic.id}
+                                style={{
+                                    padding: 20,
+                                    borderRadius: 12,
+                                    backgroundColor: '#FFFFFF',
+                                    border: `1px solid ${colors.border}`,
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                {editingId === topic.id ? (
+                                    <div style={{ flex: 1, display: 'flex', gap: 8, marginRight: 16 }}>
+                                        <input
+                                            type="text"
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            style={{
+                                                flex: 1,
+                                                padding: 8,
+                                                borderRadius: 4,
+                                                border: `1px solid ${colors.border}`,
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => handleEdit(topic.id)}
+                                            style={{
+                                                padding: '4px 12px',
+                                                borderRadius: 4,
+                                                backgroundColor: colors.success,
+                                                color: '#fff',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            Save
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <Link
+                                        to={`/topics/${topic.id}/posts`}
+                                        style={{
+                                            textDecoration: 'none',
+                                            flex: 1,
+                                        }}
+                                    >
+                                        <h3 style={{ color: colors.text, fontSize: 18, fontWeight: 600, margin: 0 }}>
+                                            {topic.title}
+                                        </h3>
+                                        <p style={{ color: colors.muted, fontSize: 14, margin: '8px 0 0 0' }}>
+                                            {formatTimeAgo(topic.time_created)}
+                                        </p>
+                                    </Link>
+                                )}
+
+                                {currentUserID === topic.user_id && (
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button
+                                            onClick={() => {
+                                                setEditingId(topic.id);
+                                                setEditTitle(topic.title);
+                                            }}
+                                            style={{
+                                                padding: '8px 16px',
+                                                borderRadius: 8,
+                                                backgroundColor: colors.muted,
+                                                color: '#fff',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(topic.id)}
+                                            style={{
+                                                padding: '8px 16px',
+                                                borderRadius: 8,
+                                                backgroundColor: colors.error,
+                                                color: '#fff',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                 </div>
             </main>
         </div>

@@ -41,6 +41,7 @@ func main() {
 	r.Get("/topics", handlers.GetTopics)
 	r.Get("/topics/{topicID}/posts", handlers.GetPostsByTopic)
 	r.Get("/topics/{topicID}/posts/{postID}/comments", handlers.GetCommentsByPost)
+	r.Get("/posts/{postID}", handlers.GetPost)
 
 	//Protected routes
 	r.Group(func(r chi.Router) {

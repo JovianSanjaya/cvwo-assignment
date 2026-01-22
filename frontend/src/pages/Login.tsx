@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { apiFetch, setToken } from "../services/api";
+import { apiFetch } from "../services/api";
 import { colors } from "../theme/colors";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -20,7 +22,7 @@ function Login() {
 
         if (response.ok) {
             const data = await response.json();
-            setToken(data.token);
+            login(data.token);
             navigate("/");
         } else {
             setError("Invalid username or password");

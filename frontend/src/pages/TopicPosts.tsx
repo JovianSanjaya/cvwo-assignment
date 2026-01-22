@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { colors } from '../theme/colors';
-import { apiFetch, getToken } from '../services/api';
+import { apiFetch } from '../services/api';
+import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
+import { formatTimeAgo } from '../utils/timeAgo';
 
 interface Post {
     id: number;
@@ -15,7 +18,7 @@ function TopicPosts() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
-    const isLoggedIn = !!getToken();
+    const { isLoggedIn } = useAuth();
 
     useEffect(() => {
         fetch(`http://localhost:8080/topics/${id}/posts`)
@@ -53,25 +56,19 @@ function TopicPosts() {
             backgroundColor: colors.background,
             fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         }}>
-            {/* Header */}
-            <header style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '16px 40px',
-                borderBottom: `1px solid ${colors.border}`,
-                backgroundColor: '#FFFFFF',
-                gap: 16,
-            }}>
-                <Link to="/" style={{ color: colors.primary, textDecoration: 'none', fontWeight: 500 }}>
-                    ← Back
-                </Link>
-                <h1 style={{ fontSize: 20, fontWeight: 700, color: colors.text, margin: 0 }}>
-                    Posts
-                </h1>
-            </header>
+            <Navbar />
 
-            {/* Main Content */}
-            <main style={{ maxWidth: 800, margin: '0 auto', padding: 40 }}>
+            <main style={{ maxWidth: 800, margin: '0 auto', padding: '100px 40px 40px 40px' }}>
+                <Link to="/" style={{
+                    color: colors.primary,
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    display: 'inline-block',
+                    marginBottom: 24,
+                }}>
+                    ← Back to Topics
+                </Link>
+
                 {/* Create Post Form */}
                 {isLoggedIn && (
                     <form onSubmit={handleSubmit} style={{ marginBottom: 32 }}>
@@ -123,7 +120,6 @@ function TopicPosts() {
                     </form>
                 )}
 
-                {/* Posts List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     {posts.map(post => (
                         <Link
@@ -144,7 +140,7 @@ function TopicPosts() {
                                 {post.content}
                             </p>
                             <span style={{ color: colors.muted, fontSize: 12 }}>
-                                {post.time_created}
+                                {formatTimeAgo(post.time_created)}
                             </span>
                         </Link>
                     ))}

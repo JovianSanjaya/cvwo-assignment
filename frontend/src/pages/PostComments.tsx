@@ -1,19 +1,38 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { colors } from '../theme/colors';
-import { apiFetch, getToken } from '../services/api';
+import { apiFetch } from '../services/api';
+import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
+import { formatTimeAgo } from '../utils/timeAgo';
+
+interface Post {
+    id: number;
+    title: string;
+    content: string;
+    time_created: string;
+}
 
 interface Comment {
     id: number;
     content: string;
+    username: string; // Added username field
     time_created: string;
 }
 
 function PostComments() {
     const { topicId, postId } = useParams();
     const [comments, setComments] = useState<Comment[]>([]);
+    const [post, setPost] = useState<Post | null>(null);
     const [content, setContent] = useState("");
-    const isLoggedIn = !!getToken();
+    const { isLoggedIn, user } = useAuth(); // Destructure user
+
+    useEffect(() => {
+        fetch(`http://localhost:8080/posts/${postId}`)
+            .then(response => response.json())
+            .then(data => setPost(data))
+            .catch(error => console.error("Error fetching post", error));
+    }, [postId]);
 
     useEffect(() => {
         fetch(`http://localhost:8080/topics/${topicId}/posts/${postId}/comments`)
@@ -22,9 +41,8 @@ function PostComments() {
             .catch(error => console.error("Error fetching comments", error));
     }, [topicId, postId]);
 
-    async function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        if (!content.trim()) return;
+    async function handleSubmit() {
+        if (!content.trim() || !user) return; // Ensure user is present
 
         const response = await apiFetch(`/topics/${topicId}/posts/${postId}/comments`, {
             method: 'POST',
@@ -36,6 +54,7 @@ function PostComments() {
             const newComment: Comment = {
                 id: data.id,
                 content: content,
+                username: user.username, // Use current user's name
                 time_created: "Just Now",
             };
             setComments([...comments, newComment]);
@@ -49,79 +68,115 @@ function PostComments() {
             backgroundColor: colors.background,
             fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         }}>
-            {/* Header */}
-            <header style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '16px 40px',
-                borderBottom: `1px solid ${colors.border}`,
-                backgroundColor: '#FFFFFF',
-                gap: 16,
-            }}>
-                <Link to={`/topics/${topicId}/posts`} style={{ color: colors.primary, textDecoration: 'none', fontWeight: 500 }}>
-                    ← Back
-                </Link>
-                <h1 style={{ fontSize: 20, fontWeight: 700, color: colors.text, margin: 0 }}>
-                    Comments
-                </h1>
-            </header>
+            <Navbar />
 
-            {/* Main Content */}
-            <main style={{ maxWidth: 800, margin: '0 auto', padding: 40 }}>
-                {/* Create Comment Form */}
-                {isLoggedIn && (
-                    <form onSubmit={handleSubmit} style={{ marginBottom: 32 }}>
-                        <textarea
-                            placeholder="Write a comment..."
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: 12,
-                                marginBottom: 12,
-                                borderRadius: 8,
-                                border: `1px solid ${colors.border}`,
-                                fontSize: 16,
-                                minHeight: 80,
-                                resize: 'vertical',
-                                boxSizing: 'border-box',
-                            }}
-                        />
-                        <button
-                            type="submit"
-                            style={{
-                                padding: '12px 24px',
-                                borderRadius: 8,
-                                backgroundColor: colors.primary,
-                                color: '#fff',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontWeight: 600,
-                            }}
-                        >
-                            Add Comment
-                        </button>
-                    </form>
+            <main style={{ maxWidth: 800, margin: '0 auto', padding: '100px 40px 40px 40px' }}>
+                <Link to={`/topics/${topicId}/posts`} style={{
+                    color: colors.primary,
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    fontSize: 14,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    marginBottom: 24,
+                }}>
+                    ← Back to Posts
+                </Link>
+
+                {post ? (
+                    <div style={{
+                        padding: 32,
+                        borderRadius: 16,
+                        backgroundColor: '#FFFFFF',
+                        border: `1px solid ${colors.border}`,
+                        marginBottom: 32,
+                    }}>
+                        <h1 style={{ color: colors.text, fontSize: 24, fontWeight: 700, margin: '0 0 16px 0' }}>
+                            {post.title}
+                        </h1>
+                        <p style={{ color: colors.text, fontSize: 16, margin: '0 0 20px 0', lineHeight: 1.6 }}>
+                            {post.content}
+                        </p>
+                        <div style={{ color: colors.muted, fontSize: 12 }}>
+                            {formatTimeAgo(post.time_created)}
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{ padding: 40, textAlign: 'center', color: colors.muted }}>
+                        Loading post...
+                    </div>
                 )}
 
-                {/* Comments List */}
+                {/* Create Comment Form */}
+                {isLoggedIn && (
+                    <div style={{ marginBottom: 32 }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            backgroundColor: '#FFFFFF',
+                            borderRadius: 12,
+                            padding: '4px 16px',
+                            border: `1px solid ${colors.border}`,
+                            gap: 12,
+                        }}>
+                            <textarea
+                                placeholder="Join the conversation..."
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: 'transparent',
+                                    border: 'none',
+                                    padding: '12px 0',
+                                    fontSize: 15,
+                                    color: colors.text,
+                                    outline: 'none',
+                                    resize: 'none',
+                                    fontFamily: 'inherit',
+                                    minHeight: 24,
+                                }}
+                            />
+                            {content.trim() && (
+                                <button
+                                    onClick={handleSubmit}
+                                    style={{
+                                        padding: '8px 16px',
+                                        borderRadius: 8,
+                                        backgroundColor: colors.primary,
+                                        color: '#fff',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    Comment
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {comments.map(comment => (
                         <div
                             key={comment.id}
                             style={{
-                                padding: 16,
+                                padding: 20,
                                 borderRadius: 12,
                                 backgroundColor: '#FFFFFF',
                                 border: `1px solid ${colors.border}`,
                             }}
                         >
-                            <p style={{ color: colors.text, fontSize: 15, margin: 0 }}>
+                            <div style={{ marginBottom: 8, fontSize: 12, color: colors.muted }}>
+                                <span style={{ fontWeight: 600, color: colors.text }}>{comment.username}</span>
+                                <span style={{ margin: '0 8px' }}>•</span>
+                                {formatTimeAgo(comment.time_created)}
+                            </div>
+                            <p style={{ color: colors.text, fontSize: 15, margin: 0, lineHeight: 1.5 }}>
                                 {comment.content}
                             </p>
-                            <span style={{ color: colors.muted, fontSize: 12, marginTop: 8, display: 'block' }}>
-                                {comment.time_created}
-                            </span>
                         </div>
                     ))}
                 </div>

@@ -48,9 +48,10 @@ func CreateTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := r.Context().Value("user_id").(int)
 	var newID int
 
-	err := db.DB.QueryRow("INSERT INTO topics (title) VALUES ($1) RETURNING id", req.Title).Scan(&newID)
+	err := db.DB.QueryRow("INSERT INTO topics (title, user_id) VALUES ($1, $2) RETURNING id", req.Title, userID).Scan(&newID)
 
 	if err != nil {
 		fmt.Printf("Database error in CreateTopics: %v\n", err)
