@@ -7,160 +7,92 @@ connect like-minded communities by facilitating discussions across various topic
 part of the CVWO Mid-Submission deliverables, the project aims not only to deliver a
 working product with a seamless user experience, but also to serve as a learning process
 for practising a good software development practices.
+
 2. User Stories
 I have organized the requirements into functional Epics and prioritized them to guide
 the development process.
+
 Epic 1: Public Access
-Priority
-High
-High
-Medium
-
-As a...
-I want to...
-Guest User view a dashboard of all
-available topics
-Guest User click on a specific topic
-
-So that...
-I can browse discussions that
-interest me.
-I can see a list of all posts within it
-sorted by creation time.
-Guest User read comments on a post I can understand the community's
-perspective on the issue.
+Priority    As a...        I want to...                       So that...
+High        Guest User     view a dashboard of all            I can browse discussions that
+                           available topics                   interest me.
+High        Guest User     click on a specific topic          I can see a list of all posts within it
+                                                              sorted by creation time.
+Medium      Guest User     read comments on a post            I can understand the community's
+                                                              perspective on the issue.
 
 Epic 2: User Identity & Authentication
-Priority
-
-As a...
-
-I want to...
-
-So that...
-
-High
-
-New User
-
-register for an account I can establish a unique identity on
-the forum.
-
-High
-
-Registered
-User
-
-log in securely
-
-The system recognizes me and
-grants access to posting features.
-
-High
-
-System
-
-issue a secure token
-(JWT) upon login
-
-The user remains authenticated
-across page refreshes.
-
-Medium
-
-Registered
-User
-
-log out of my account I can prevent unauthorized access
-on shared devices.
+Priority    As a...        I want to...                       So that...
+High        New User       register for an account            I can establish a unique identity on
+                                                              the forum.
+High        Registered     log in securely with email         The system recognizes me and
+            User           or Google OAuth                    grants access to posting features.
+High        System         issue a secure token               The user remains authenticated
+                           (JWT) upon login                   across page refreshes.
+Medium      Registered     log out of my account              I can prevent unauthorized access
+            User                                              on shared devices.
 
 Epic 3: Content Creation & Interaction
-Priority
+Priority    As a...        I want to...                       So that...
+High        Logged-in      create a new topic                 I can start a broad category of
+            User                                              discussion.
+High        Logged-in      create a post within a topic       I can share my thoughts and
+            User                                              questions.
+High        Logged-in      comment on existing posts          I can engage in conversations
+            User                                              with other users.
+Low         Logged-in      edit or delete my own posts        I can correct mistakes or
+            User                                              remove outdated content.
 
-As a...
+Epic 4: Voting & Engagement
+Priority    As a...        I want to...                       So that...
+Medium      Logged-in      upvote or downvote posts           I can express my agreement
+            User           and comments                       or engagement with content.
 
-I want to...
-
-So that...
-
-High
-
-Logged-in
-User
-
-create a new topic
-
-I can start a broad category of
-discussion.
-
-High
-
-Logged-in
-User
-
-create a post within a topic I can share my thoughts and
-questions.
-
-High
-
-Logged-in
-User
-
-comment on existing posts I can engage in conversations
-with other users.
-
-Low
-
-Logged-in
-User
-
-edit or delete my own posts I can correct mistakes.
-
-Note : Guest and logged-in user roles are separated to allow public real access while
-restricting content creation to logged-in users.
+Note : Guest and logged-in user roles are separated to allow public read access while
+restricting content creation and interaction to authenticated users.
 
 3. Technical Architecture
 3.1 Frontend
-The frontend is built using React and Typescript to ensure type safety and reduce
-runtime errors. The technology stack was also chosen to fulfill the requirements of the
-assignment. For state management, Redux is used to handle global application state that
-needs to persist across pages including User session state and cached topic data to
-reduce redundant API calls during navigation. Material UI (MUI) is used as the UI
-library to provide a consistent design.
+The frontend is built using React and TypeScript to ensure type safety and reduce
+runtime errors. For state management, React Context API is used to handle global 
+application state, primarily for managing the user session and authentication status 
+through a custom AuthProvider. This ensures that user data and authentication tokens 
+are accessible across all components. Material UI (MUI) is used as the UI library 
+to provide a consistent and polished design, while Framer Motion is utilized for 
+subtle animations.
+
 3.2 Backend
-The backend is implemented using Go due to the requirement of the assignment. In this
-project, I will be using go-chi as the HTTP router due to its lightweight design and
-middleware support, which simplifies authentication and request handling.
+The backend is implemented using Go. In this project, I am using go-chi as the 
+HTTP router due to its lightweight design and excellent middleware support, which 
+simplifies authentication and request handling.
 The backend follows a layered architecture:
-●​ handlers/: decoding JSON, validating inputs.
-●​ models/: matching the database schema.
+● handlers/: decoding JSON, validating inputs, and routing to logic.
+● models/: matching the database schema and data structures.
+● db/: database connection management and SQL query execution.
 
-●​ db/: database connection and SQL queries.
 3.3 Database
-PostgreSQL is used as the relational database because it is also reliable at handling
-massive amounts of information generated from the forums. In addition, I also have
-prior experience working with PostgreSQL.
+PostgreSQL is used as the relational database due to its reliability and performance 
+under load. 
 Schema Design:
-●​ Users: id (PK), username (Unique), password_hash, created_at.
-●​ Topics: id (PK), title, created_at.
-●​ Posts: id (PK), title, content, topic_id (FK), user_id (FK), created_at.
-●​ Comments: id (PK), content, post_id (FK), user_id (FK), created_at.
-3.4 Authentication & Security
-The application uses JSON Web Tokens (JWT) for user authentication. During
-registration, user passwords are securely hashed using bcrypt before being stored in the
-database to protect sensitive information. When a user logs in successfully, the backend
-issues a JWT containing the user’s identity and an expiration time.
-For actions such as creating, editing, or deleting posts, the system first checks whether
-the user is logged in by verifying the JWT before processing the request. This ensures
-that only authenticated users are allowed to modify content, while guest users are
-limited to read-only access.
-3.5 Docker and AWS
-The application is containerized using Docker to ensure consistency between
-development and deployment environments. Separate Dockerfiles are created for the
-frontend and backend services which allows each of them to be built, configured, and
-deployed independently. Docker Compose is used to orchestrate all services.
-The application will be deployed on Amazon Web Services (AWS). The frontend and
-backend services are hosted on an EC2 instance, while AWS RDS is used for the
-production database. Using RDS provides managed backups and improved reliability.
+● Users: id (PK), username (Unique), password_hash, role, time_created.
+● Topics: id (PK), title, user_id (FK), time_created.
+● Posts: id (PK), title, content, topic_id (FK), user_id (FK), time_created.
+● Comments: id (PK), content, post_id (FK), user_id (FK), time_created.
+● Votes: id (PK), user_id (FK), post_id (FK), comment_id (FK), vote_type, time_created.
 
-
+3.4 Authentication & Security
+The application uses JSON Web Tokens (JWT) for user authentication. During registration, 
+user passwords are securely hashed using bcrypt. When a user logs in successfully, 
+the backend issues a JWT containing the user’s identity.
+The application also integrates Google OAuth 2.0, allowing users to sign in seamlessly 
+using their Google accounts. This is implemented using the @react-oauth/google 
+library on the frontend and a dedicated authentication handler on the backend that 
+validates Google tokens.
+
+3.5 Docker and Deployment
+The application is containerized using Docker to ensure consistency between 
+environments. Separate Dockerfiles are created for the frontend and backend services, 
+and Docker Compose is used to orchestrate them along with the PostgreSQL database.
+The application is deployed using a hybrid approach: the frontend is hosted on 
+Vercel for optimal delivery, while the backend service and PostgreSQL database 
+are hosted on Amazon Web Services (AWS) using EC2 and RDS for reliability and scale.
