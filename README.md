@@ -1,33 +1,28 @@
-# SquAre - A Modern Forum Application
+# SquAre - Forum Application
 
-A full-stack forum application built with React, Go, and PostgreSQL. Features include topic discussions, voting, commenting, and user authentication.
+A full-stack forum application built with React, Go, and PostgreSQL.
+
+## Author
+
+Jovian Sanjaya Putra  
+CVWO Winter Assignment 2025/2026  
+School of Computing, National University of Singapore
 
 ## Features
 
-- 🔐 User Authentication (Register/Login with JWT)
-- 📝 Create and manage discussion topics
-- 💬 Post and comment on discussions
-- ⬆️ Upvote/downvote posts and comments
-- 🔍 Search and sort functionality
-- 👤 User profiles with consistent avatars
-- 📱 Responsive design with modern UI
-- 🎨 Framer Motion animations
-- 🐳 Docker containerization
+- User authentication (register/login with JWT)
+- Create and manage discussion topics
+- Post and comment on discussions
+- Upvote/downvote posts and comments
+- Search and sort functionality
+- User profiles with consistent avatars
+- Responsive design with modern UI
+- Docker containerization for easy deployment
 
 ## Tech Stack
 
-**Frontend:**
-- React 18 with TypeScript
-- Material-UI v5
-- React Router v6
-- Framer Motion
-- Vite
-
-**Backend:**
-- Go 1.21
-- Chi Router
-- PostgreSQL 15
-- JWT Authentication
+**Frontend:** React 18, TypeScript, Material-UI, React Router, Framer Motion, Vite  
+**Backend:** Go 1.21, Chi Router, PostgreSQL 15, JWT Authentication
 
 ## Quick Start with Docker
 
@@ -38,37 +33,34 @@ A full-stack forum application built with React, Go, and PostgreSQL. Features in
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/JovianSanjaya/cvwo-assignment.git
 cd cvwo-assignment
 
 # Start all services
 docker-compose up --build
 
-# Access the application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8080
 ```
-
-The application will automatically:
-- Set up PostgreSQL database
-- Run database migrations
-- Start the backend API server
-- Build and serve the frontend
 
 ### Stop the Application
 
 ```bash
+# Stop services
 docker-compose down
-```
 
-To remove all data:
-```bash
+# Remove all data
 docker-compose down -v
 ```
 
-## Manual Setup (Development)
 
-### Backend Setup
+Backend runs on http://localhost:8080
+
+Frontend runs on http://localhost:3000
+
+Database runs on http://localhost:5433
+
+## Manual Setup for Development
+
+### Backend
 
 ```bash
 cd backend
@@ -76,24 +68,16 @@ cd backend
 # Install dependencies
 go mod download
 
-# Set up environment variables
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_USER=postgres
-export DB_PASSWORD=postgres
-export DB_NAME=cvwo_forum
-export JWT_SECRET=your-secret-key
-
-# Run PostgreSQL (if not using Docker)
-# Make sure PostgreSQL is running on port 5432
+# Configure environment variables (create .env file or use start.sh)
+DATABASE_URL=host=localhost port=5432 user=postgres password=postgres dbname=cvwo sslmode=disable
+JWT_SECRET=your-secret-key
 
 # Run the server
 go run main.go
 ```
 
-Backend will run on http://localhost:8080
 
-### Frontend Setup
+### Frontend
 
 ```bash
 cd frontend
@@ -105,7 +89,23 @@ npm install
 npm run dev
 ```
 
-Frontend will run on http://localhost:5173
+
+### Quick Start Script
+
+```bash
+# Make script executable
+# Note start.sh is a script to test on local development
+chmod +x start.sh
+
+# Run both backend and frontend
+./start.sh
+```
+
+Backend runs on http://localhost:8080
+
+Frontend runs on http://localhost:5173
+
+Database runs on http://localhost:5432
 
 ## API Endpoints
 
@@ -144,74 +144,33 @@ cvwo-assignment/
 ├── backend/
 │   ├── db/              # Database connection
 │   ├── handlers/        # API handlers
-│   ├── middleware/      # Auth middleware
+│   ├── middleware/      # Authentication middleware
 │   ├── models/          # Data models
-│   ├── main.go          # Entry point
+│   ├── main.go          # Application entry point
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
 │   │   ├── components/  # Reusable components
-│   │   ├── context/     # Auth context
+│   │   ├── context/     # Authentication context
 │   │   ├── pages/       # Page components
 │   │   ├── services/    # API services
 │   │   ├── theme/       # Theme configuration
 │   │   └── utils/       # Utility functions
 │   ├── Dockerfile
 │   └── nginx.conf
-└── docker-compose.yml
+├── docker-compose.yml
+└── start.sh
 ```
 
 ## Database Schema
 
-### Users
-- id, username (unique), password_hash, time_created
+**Users:** id, username (unique), password_hash, time_created  
+**Topics:** id, title, user_id, time_created  
+**Posts:** id, title, content, topic_id, user_id, time_created  
+**Comments:** id, content, post_id, user_id, time_created  
+**Votes:** id, post_id, comment_id, user_id, vote_type (1=upvote, -1=downvote, 0=remove)
 
-### Topics
-- id, title, user_id, time_created
+## AI Usage Declaration
 
-### Posts
-- id, title, content, topic_id, user_id, time_created
 
-### Comments
-- id, content, post_id, user_id, time_created
 
-### Votes
-- id, post_id, comment_id, user_id, vote_type (+1/-1)
-
-## Development Notes
-
-### Environment Variables
-
-**Backend (.env)**
-```
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=cvwo_forum
-JWT_SECRET=your-secret-key-change-in-production
-```
-
-### Building for Production
-
-```bash
-# Build all services
-docker-compose build
-
-# Run in production mode
-docker-compose up -d
-```
-
-## Author
-
-Jovian Sanjaya Putra (A0334772Y)
-
-## Assignment
-
-CVWO Winter Assignment 2025/2026
-Computing for Voluntary Welfare Organisations (CVWO)
-School of Computing, National University of Singapore
-
-## License
-
-This project is created for educational purposes as part of the CVWO assignment.
