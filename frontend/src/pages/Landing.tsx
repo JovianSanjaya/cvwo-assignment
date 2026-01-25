@@ -74,7 +74,7 @@ const Landing = () => {
                 mx: 'auto',
               }}
             >
-              Your go-to platform for community-driven discussions, knowledge sharing, and meaningful connections.
+              Your go-to platform for connecting with the like-minded communities.
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -125,7 +125,7 @@ const Landing = () => {
       </Box>
 
       <Container maxWidth="lg" sx={{ pb: 8 }}>
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: 700, color: colors.text }}>
+        <Typography variant="h4" sx={{ mb: 4, fontWeight: 800, color: colors.text }}>
           Explore Discussions
         </Typography>
         
@@ -140,28 +140,42 @@ const Landing = () => {
               onClick={() => navigate(`/topics/${topic.id}/posts`)}
               sx={{
                 mb: 2,
-                bgcolor: colors.cardBg,
+                borderRadius: '16px',
                 border: 'none',
-                borderRadius: 2,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                 cursor: 'pointer',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                transition: 'all 0.2s',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+                  boxShadow: '0 12px 24px rgba(0,0,0,0.15)',
                   transform: 'translateY(-4px)',
                 },
               }}
             >
-              <CardContent sx={{ py: 2.5 }}>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <Avatar username={topic.username} size={48} />
+              <CardContent sx={{ p: '24px !important' }}>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Avatar username={topic.username} size={40} />
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: colors.text }}>
+                    <Typography 
+                      sx={{ 
+                        fontSize: '1.15rem',
+                        fontWeight: 700, 
+                        color: colors.text,
+                        mb: 0.5
+                      }}
+                    >
                       {topic.title}
                     </Typography>
-                    <Typography variant="body2" color={colors.muted}>
-                      {topic.username} · {topic.post_count} posts
-                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                      <Typography variant="caption" sx={{ color: colors.text, fontWeight: 600 }}>
+                        {topic.username}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: colors.muted }}>
+                        •
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: colors.muted }}>
+                        posts
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
               </CardContent>

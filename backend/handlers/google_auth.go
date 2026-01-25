@@ -76,11 +76,44 @@ func GoogleAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch user profile from Google to get the name
+	profileURL := "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + req.Token
+	profileResp, err := http.Get(profileURL)
+	if err != nil {
+		log.Printf("Error fetching profile: %v", err)
+		http.Error(w, "Failed to fetch user profile", http.StatusInternalServerError)
+		return
+	}
+	defer profileResp.Body.Close()
+
+	profileBody, err := io.ReadAll(profileResp.Body)
+	if err != nil {
+		http.Error(w, "Failed to read profile", http.StatusInternalServerError)
+		return
+	}
+
+	var profileData struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+	if err := json.Unmarshal(profileBody, &profileData); err != nil {
+		log.Printf("Error parsing profile: %v", err)
+		http.Error(w, "Failed to parse profile", http.StatusInternalServerError)
+		return
+	}
+
+	// Use Google name as username, fallback to email if name is empty
+	username := profileData.Name
+	if username == "" {
+		username = tokenInfo.Email
+	}
+
+	// Check if user already exists by email (use email as unique identifier)
 	var user models.User
 	var passwordHash string
 	err = db.DB.QueryRow(
 		"SELECT id, username, password_hash, role, time_created FROM users WHERE username = $1",
-		tokenInfo.Email,
+		username,
 	).Scan(&user.ID, &user.Username, &passwordHash, &user.Role, &user.TimeCreated)
 
 	if err != nil {
@@ -99,7 +132,7 @@ func GoogleAuth(w http.ResponseWriter, r *http.Request) {
 
 		err = db.DB.QueryRow(
 			"INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, time_created",
-			tokenInfo.Email,
+			username,
 			string(hash),
 			"user",
 		).Scan(&user.ID, &user.TimeCreated)
@@ -110,7 +143,7 @@ func GoogleAuth(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user.Username = tokenInfo.Email
+		user.Username = username
 		user.Role = "user"
 	}
 

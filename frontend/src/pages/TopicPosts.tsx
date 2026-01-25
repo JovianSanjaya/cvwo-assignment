@@ -99,7 +99,7 @@ function TopicPosts() {
     }
 
     async function handleDelete(postId: number) {
-        await apiFetch(`/topics/${id}/posts/${postId}`, {
+        await apiFetch(`/posts/${postId}`, {
             method: 'DELETE',
         });
 
@@ -110,7 +110,7 @@ function TopicPosts() {
     async function handleEdit(postId: number) {
         if (!editTitle.trim()) return;
 
-        const response = await apiFetch(`/topics/${id}/posts/${postId}`, {
+        const response = await apiFetch(`/posts/${postId}`, {
             method: 'PUT',
             body: JSON.stringify({ title: editTitle, content: editContent }),
         });

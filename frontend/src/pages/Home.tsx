@@ -114,7 +114,7 @@ function Home() {
                             <Box component="span" sx={{ color: colors.text }}>are</Box>
                         </Typography>
                         <Typography variant="h6" sx={{ color: colors.muted, maxWidth: '600px', lineHeight: 1.6, fontWeight: 500 }}>
-                            Great to see you back, {user?.username}! Ready to join the conversation?
+                            Great to see you back, {user?.username}!
                         </Typography>
                     </Stack>
                 </Container>
