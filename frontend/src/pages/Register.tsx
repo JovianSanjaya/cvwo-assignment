@@ -10,12 +10,15 @@ import {
     Link as MUILink,
     InputAdornment,
     IconButton,
-    Stack
+    Stack,
+    Divider
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { useGoogleLogin } from '@react-oauth/google';
 import { apiFetch } from "../services/api";
 import { colors } from "../theme/colors";
+import { useAuth } from "../context/AuthContext";
 
 function Register() {
     const [username, setUsername] = useState("");
@@ -24,6 +27,7 @@ function Register() {
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -45,6 +49,30 @@ function Register() {
             setError("Username already taken");
         }
     }
+
+    const handleGoogleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            try {
+                const response = await apiFetch("/auth/google", {
+                    method: "POST",
+                    body: JSON.stringify({ token: tokenResponse.access_token }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    login(data.token);
+                    navigate("/home");
+                } else {
+                    setError("Google authentication failed");
+                }
+            } catch (error) {
+                setError("Failed to authenticate with Google");
+            }
+        },
+        onError: () => {
+            setError("Google login failed");
+        },
+    });
 
     return (
         <Box sx={{
@@ -160,6 +188,34 @@ function Register() {
                             }}
                         >
                             Sign Up
+                        </Button>
+
+                        <Divider sx={{ my: 1 }}>
+                            <Typography sx={{ color: colors.muted, fontSize: '0.85rem' }}>
+                                OR
+                            </Typography>
+                        </Divider>
+
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            onClick={() => handleGoogleLogin()}
+                            sx={{
+                                padding: '12px',
+                                borderRadius: '12px',
+                                borderColor: colors.border,
+                                color: colors.text,
+                                fontSize: '1rem',
+                                fontWeight: 700,
+                                textTransform: 'none',
+                                '&:hover': {
+                                    borderColor: colors.primary,
+                                    backgroundColor: 'rgba(59, 130, 246, 0.04)',
+                                }
+                            }}
+                        >
+                            <Box component="img" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" sx={{ width: 20, height: 20, mr: 1 }} />
+                            Continue with Google
                         </Button>
                     </Stack>
                 </Box>

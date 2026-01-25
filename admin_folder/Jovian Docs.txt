@@ -1,0 +1,29 @@
+handlers : query to database then send the result in json to main.go
+in golang lowercase of the first letter means private uppercase means public
+models : create a blueprint. It creates struct which is similar to class but it only holds data while class holds data and behaviour
+package is the folder 
+if backend the main entrance then the package should be package main and it needs to be inside main.go 
+inside main.go, it needs to have func main()
+
+:= declare + assignment
+= assignment 
+
+To declare variable 
+var (names) int  //if dont assign first
+var (names) = 10;
+
+go.mod = module path
+go.sum
+
+CORS
+so initially backend cannot receive from backend because 
+they are from different origin localhost right thats why by adding 
+cors we tell the backend thaat its okay to accept from frontend
+
+json.NewEncoder(w).Encode() //write from go variable variable into json
+json.NewDecoder(r.body).Decode() //read from json into go variable
+
+Scan method is copy data from row table to go variable
+
+db.DB.Query neeed close 
+db.DB.QueryRow no need close and only return one matching occurrence 

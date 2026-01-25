@@ -38,6 +38,7 @@ func main() {
 	//Public routes
 	r.Post("/auth/register", handlers.Register)
 	r.Post("/auth/login", handlers.Login)
+	r.Post("/auth/google", handlers.GoogleAuth)
 	r.Get("/topics", handlers.GetTopics)
 	r.Get("/topics/{topicID}/posts", handlers.GetPostsByTopic)
 	r.Get("/topics/{topicID}/posts/{postID}/comments", handlers.GetCommentsByPost)

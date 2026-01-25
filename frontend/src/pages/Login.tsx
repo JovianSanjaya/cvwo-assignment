@@ -9,10 +9,12 @@ import {
     Alert,
     Link as MUILink,
     InputAdornment,
-    IconButton
+    IconButton,
+    Divider
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { useGoogleLogin } from '@react-oauth/google';
 import { apiFetch } from "../services/api";
 import { colors } from "../theme/colors";
 import { useAuth } from "../context/AuthContext";
@@ -42,6 +44,30 @@ function Login() {
             setError("Invalid username or password");
         }
     }
+
+    const handleGoogleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            try {
+                const response = await apiFetch("/auth/google", {
+                    method: "POST",
+                    body: JSON.stringify({ token: tokenResponse.access_token }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    login(data.token);
+                    navigate("/home");
+                } else {
+                    setError("Google authentication failed");
+                }
+            } catch (error) {
+                setError("Failed to authenticate with Google");
+            }
+        },
+        onError: () => {
+            setError("Google login failed");
+        },
+    });
 
     return (
         <Box sx={{
@@ -152,6 +178,34 @@ function Login() {
                         }}
                     >
                         Sign In
+                    </Button>
+
+                    <Divider sx={{ my: 3 }}>
+                        <Typography sx={{ color: colors.muted, fontSize: '0.85rem' }}>
+                            OR
+                        </Typography>
+                    </Divider>
+
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => handleGoogleLogin()}
+                        sx={{
+                            padding: '12px',
+                            borderRadius: '12px',
+                            borderColor: colors.border,
+                            color: colors.text,
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                            textTransform: 'none',
+                            '&:hover': {
+                                borderColor: colors.primary,
+                                backgroundColor: 'rgba(59, 130, 246, 0.04)',
+                            }
+                        }}
+                    >
+                        <Box component="img" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" sx={{ width: 20, height: 20, mr: 1 }} />
+                        Continue with Google
                     </Button>
                 </Box>
 

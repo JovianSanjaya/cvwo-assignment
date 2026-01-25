@@ -1,4 +1,4 @@
-# SquAre - Forum Application
+# SqUare - Forum Application
 
 A full-stack forum application built with React, Go, and PostgreSQL.
 
@@ -37,9 +37,13 @@ git clone https://github.com/JovianSanjaya/cvwo-assignment.git
 cd cvwo-assignment
 
 # Start all services
-docker-compose up --build
+docker-compose up -d
 
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8080
 ```
+
 
 ### Stop the Application
 
@@ -51,6 +55,53 @@ docker-compose down
 docker-compose down -v
 ```
 
+## Google OAuth Setup
+
+The application supports Google Sign-In for easier authentication.
+
+### Backend Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
+5. Configure OAuth consent screen
+6. Create OAuth Client ID:
+   - Application type: **Web application**
+   - Authorized JavaScript origins: `http://localhost:5173`, `http://localhost:3000`
+   - Authorized redirect URIs: `http://localhost:5173`, `http://localhost:3000`
+7. Copy the **Client ID**
+
+### Environment Variables
+
+Add to your environment (.env file or docker-compose.yml):
+
+```bash
+# Backend
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+
+# Frontend
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+```
+
+### For Docker
+
+Update `docker-compose.yml` backend service:
+
+```yaml
+backend:
+  environment:
+    - GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+```
+
+Update `docker-compose.yml` frontend service:
+
+```yaml
+frontend:
+  build:
+    args:
+      - VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+```
 
 Backend runs on http://localhost:8080
 
@@ -58,84 +109,36 @@ Frontend runs on http://localhost:3000
 
 Database runs on http://localhost:5433
 
-## Manual Setup for Development
-
-### Backend
-
-```bash
-cd backend
-
-# Install dependencies
-go mod download
-
-# Configure environment variables (create .env file or use start.sh)
-DATABASE_URL=host=localhost port=5432 user=postgres password=postgres dbname=cvwo sslmode=disable
-JWT_SECRET=your-secret-key
-
-# Run the server
-go run main.go
-```
-
-
-### Frontend
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-```
-
-
-### Quick Start Script
-
-```bash
-# Make script executable
-# Note start.sh is a script to test on local development
-chmod +x start.sh
-
-# Run both backend and frontend
-./start.sh
-```
-
-Backend runs on http://localhost:8080
-
-Frontend runs on http://localhost:5173
-
-Database runs on http://localhost:5432
-
 ## API Endpoints
 
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login user
-- `GET /auth/me` - Get current user (protected)
+Authentication:
+- POST /auth/register - Register new user
+- POST /auth/login - Login user
+- POST /auth/google - Login/register with Google OAuth
+- GET /auth/me - Get current user (protected)
 
-### Topics
-- `GET /topics` - Get all topics
-- `POST /topics` - Create topic (protected)
-- `PUT /topics/:id` - Update topic (protected)
-- `DELETE /topics/:id` - Delete topic (protected)
+Topics:
+- GET /topics - Get all topics
+- POST /topics - Create topic (protected)
+- PUT /topics/:id - Update topic (protected)
+- DELETE /topics/:id - Delete topic (protected)
 
-### Posts
-- `GET /topics/:topicId/posts` - Get posts in topic
-- `GET /posts/:id` - Get single post
-- `POST /topics/:topicId/posts` - Create post (protected)
-- `PUT /posts/:id` - Update post (protected)
-- `DELETE /posts/:id` - Delete post (protected)
+Posts:
+- GET /topics/:topicId/posts - Get posts in topic
+- GET /posts/:id - Get single post
+- POST /topics/:topicId/posts - Create post (protected)
+- PUT /posts/:id - Update post (protected)
+- DELETE /posts/:id - Delete post (protected)
 
-### Comments
-- `GET /topics/:topicId/posts/:postId/comments` - Get comments
-- `POST /topics/:topicId/posts/:postId/comments` - Create comment (protected)
-- `PUT /comments/:id` - Update comment (protected)
-- `DELETE /comments/:id` - Delete comment (protected)
+Comments:
+- GET /topics/:topicId/posts/:postId/comments - Get comments
+- POST /topics/:topicId/posts/:postId/comments - Create comment (protected)
+- PUT /comments/:id - Update comment (protected)
+- DELETE /comments/:id - Delete comment (protected)
 
-### Voting
-- `POST /posts/:id/vote` - Vote on post (protected)
-- `POST /comments/:id/vote` - Vote on comment (protected)
+Voting:
+- POST /posts/:id/vote - Vote on post (protected)
+- POST /comments/:id/vote - Vote on comment (protected)
 
 ## Project Structure
 
@@ -164,11 +167,11 @@ cvwo-assignment/
 
 ## Database Schema
 
-**Users:** id, username (unique), password_hash, time_created  
-**Topics:** id, title, user_id, time_created  
-**Posts:** id, title, content, topic_id, user_id, time_created  
-**Comments:** id, content, post_id, user_id, time_created  
-**Votes:** id, post_id, comment_id, user_id, vote_type (1=upvote, -1=downvote, 0=remove)
+- Users: id, username (unique), password_hash, time_created
+- Topics: id, title, user_id, time_created
+- Posts: id, title, content, topic_id, user_id, time_created
+- Comments: id, content, post_id, user_id, time_created
+- Votes: id, post_id, comment_id, user_id, vote_type (1=upvote, -1=downvote, 0=remove)
 
 ## AI Usage Declaration
 
