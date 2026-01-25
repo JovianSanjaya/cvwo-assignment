@@ -224,7 +224,6 @@ cvwo-assignment/
 - `user_id` - Integer, references users(id) with cascade delete
 - `vote_type` - Integer (1 = upvote, -1 = downvote, 0 = remove vote)
 - `time_created` - Timestamp with timezone, default current timestamp
-- **Constraint:** Unique combination of (user_id, post_id, comment_id)
 
 ## 8. AI Usage Declaration
 
