@@ -36,22 +36,23 @@ SqUare is a full-stack web forum application designed for open discussions acros
 
 ## 2. Table of Contents
 
-- 1. About the Project
-  - 1.1 Description
-  - 1.2 Tech Stack
-  - 1.3 Features
-- 2. Table of Contents
-- 3. Getting Started
-  - 3.1 Installation
-  - 3.2 Building and Running the App
-- 4. Google OAuth Setup
-  - 4.1 Backend Setup
-  - 4.2 Environment Variables
-- 5. API Endpoints
-- 6. Project Structure
-- 7. Database Schema
-- 8. AI Usage Declaration
-- 9. License
+- [1. About the Project](#1-about-the-project)
+  - [1.1 Description](#11-description)
+  - [1.2 Tech Stack](#12-tech-stack)
+  - [1.3 Features](#13-features)
+- [2. Table of Contents](#2-table-of-contents)
+- [3. Getting Started](#3-getting-started)
+  - [3.1 Installation](#31-installation)
+  - [3.2 Building and Running the App](#32-building-and-running-the-app)
+  - [3.3 Deploying to Vercel](#33-deploying-to-vercel)
+- [4. Google OAuth Setup](#4-google-oauth-setup)
+  - [4.1 Backend Setup](#41-backend-setup)
+  - [4.2 Environment Variables](#42-environment-variables)
+- [5. API Endpoints](#5-api-endpoints)
+- [6. Project Structure](#6-project-structure)
+- [7. Database Schema](#7-database-schema)
+- [8. AI Usage Declaration](#8-ai-usage-declaration)
+- [9. License](#9-license)
 
 ## 3. Getting Started
 
@@ -88,6 +89,53 @@ Once the services are running, you can access:
 - **Frontend:** [http://localhost:3000](http://localhost:3000)
 - **Backend API:** [http://localhost:8080](http://localhost:8080)
 - **Database:** localhost:5433
+
+### 3.3 Deploying to Vercel
+
+The frontend can be deployed to Vercel for production hosting. Follow these steps:
+
+#### Step 1: Prepare Your Repository
+Ensure your code is pushed to GitHub:
+```bash
+git add .
+git commit -m "Prepare for Vercel deployment"
+git push origin main
+```
+
+#### Step 2: Deploy to Vercel
+
+1. Go to [Vercel](https://vercel.com) and sign in with GitHub
+2. Click "Add New Project"
+3. Import your GitHub repository
+4. Configure the project:
+   - **Framework Preset:** Vite
+   - **Root Directory:** `frontend`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+
+#### Step 3: Set Environment Variables
+
+In the Vercel project settings, add the following environment variables:
+
+- `VITE_API_URL` - Your backend API URL (e.g., hosted on Railway, Render, or AWS)
+- `VITE_GOOGLE_CLIENT_ID` - Your Google OAuth Client ID
+
+#### Step 4: Update Google OAuth Settings
+
+Add your Vercel deployment URL to the Google Cloud Console:
+- Authorized JavaScript origins: `https://your-app.vercel.app`
+- Authorized redirect URIs: `https://your-app.vercel.app`
+
+#### Backend Deployment Options
+
+Since Vercel is primarily for frontend/serverless applications, you'll need to deploy your Go backend separately:
+
+- **Railway:** [railway.app](https://railway.app) - Easy PostgreSQL + Go deployment
+- **Render:** [render.com](https://render.com) - Free tier available for web services and PostgreSQL
+- **AWS:** EC2 + RDS for production-grade hosting
+- **Google Cloud Run:** Containerized deployment with Cloud SQL
+
+Update the `VITE_API_URL` environment variable in Vercel to point to your deployed backend.
 
 ## 4. Google OAuth Setup
 
