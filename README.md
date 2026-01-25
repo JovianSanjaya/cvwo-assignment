@@ -30,7 +30,6 @@ SqUare is a full-stack web forum application designed for open discussions acros
 - Post and comment on discussions
 - Upvote/downvote system for posts and comments
 - Search and sort functionality
-- User profiles with consistent avatars
 - Responsive design with modern UI
 - Full Docker containerization for easy deployment
 
@@ -44,7 +43,6 @@ SqUare is a full-stack web forum application designed for open discussions acros
 - [3. Getting Started](#3-getting-started)
   - [3.1 Installation](#31-installation)
   - [3.2 Building and Running the App](#32-building-and-running-the-app)
-  - [3.3 Deploying to Vercel](#33-deploying-to-vercel)
 - [4. Google OAuth Setup](#4-google-oauth-setup)
   - [4.1 Backend Setup](#41-backend-setup)
   - [4.2 Environment Variables](#42-environment-variables)
@@ -52,7 +50,6 @@ SqUare is a full-stack web forum application designed for open discussions acros
 - [6. Project Structure](#6-project-structure)
 - [7. Database Schema](#7-database-schema)
 - [8. AI Usage Declaration](#8-ai-usage-declaration)
-- [9. License](#9-license)
 
 ## 3. Getting Started
 
@@ -126,9 +123,6 @@ frontend:
       - VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 ```
 
-After updating the environment variables, rebuild the containers:
-
-```bash
 docker-compose up --build -d
 
 After updating the environment variables, rebuild the containers:
@@ -236,14 +230,10 @@ cvwo-assignment/
 
 Throughout the development of this project, AI tools (GitHub Copilot and ChatGPT) were used to assist with:
 
-- Code debugging and error resolution
-- Writing boilerplate code and repetitive patterns
-- Understanding best practices for Go and React development
-- Generating initial project structure and configuration files
-- Documentation and code comments
+- Code debugging 
+- Understanding best practices for development
+- Researching certaing concepts in web development
 
 All AI-generated code was reviewed, tested, and modified to fit the specific requirements of this project. The core logic, architecture decisions, and feature implementations were designed and implemented by the author.
 
-## 9. License
 
-This project is licensed under the MIT License.
