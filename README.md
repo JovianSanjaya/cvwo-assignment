@@ -232,7 +232,7 @@ Throughout the development of this project, AI tools (GitHub Copilot and ChatGPT
 
 - Code debugging 
 - Understanding best practices for development
-- Researching certaing concepts in web development
+- Researching certain concepts in web development
 
 All AI-generated code was reviewed, tested, and modified to fit the specific requirements of this project. The core logic, architecture decisions, and feature implementations were designed and implemented by the author.
 
