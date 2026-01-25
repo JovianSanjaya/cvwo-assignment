@@ -23,7 +23,7 @@ func main() {
 	r.Use(chimiddleware.Logger)
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -53,12 +53,12 @@ func main() {
 		r.Delete("/topics/{topicID}", handlers.DeleteTopic)
 
 		r.Post("/topics/{topicID}/posts", handlers.CreatePosts)
-		r.Put("/topics/{topicID}/posts/{postID}", handlers.UpdatePosts)
-		r.Delete("/topics/{topicID}/posts/{postID}", handlers.DeletePosts)
+		r.Put("/posts/{postID}", handlers.UpdatePosts)
+		r.Delete("/posts/{postID}", handlers.DeletePosts)
 
 		r.Post("/topics/{topicID}/posts/{postID}/comments", handlers.CreateComments)
-		r.Put("/topics/{topicID}/posts/{postID}/comments/{commentID}", handlers.UpdateComments)
-		r.Delete("/topics/{topicID}/posts/{postID}/comments/{commentID}", handlers.DeleteComments)
+		r.Put("/comments/{commentID}", handlers.UpdateComments)
+		r.Delete("/comments/{commentID}", handlers.DeleteComments)
 
 		r.Post("/posts/{postID}/vote", handlers.VotePosts)
 		r.Post("/comments/{commentID}/vote", handlers.VoteComments)

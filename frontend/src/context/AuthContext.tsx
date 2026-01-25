@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { getToken, setToken, removeToken } from '../services/api';
+import { getToken, setToken, removeToken, apiFetch } from '../services/api';
 
 interface User {
     id: number;
@@ -23,12 +23,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const token = getToken();
         if (token) {
-            // Fetch user info from /auth/me endpoint
-            fetch('http://localhost:8080/auth/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
+            apiFetch('/auth/me')
                 .then(res => res.ok ? res.json() : Promise.reject())
-                .then(data => setUser({ id: data.user_id, username: data.username }))
+                .then(data => setUser({ id: data.id, username: data.username }))
                 .catch(() => {
                     removeToken();
                     setUser(null);
@@ -41,12 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     function login(token: string) {
         setToken(token);
-        // Decode user from token or fetch from /auth/me
-        fetch('http://localhost:8080/auth/me', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
+        apiFetch('/auth/me')
             .then(res => res.json())
-            .then(data => setUser({ id: data.user_id, username: data.username }));
+            .then(data => setUser({ id: data.id, username: data.username }));
     }
 
     function logout() {

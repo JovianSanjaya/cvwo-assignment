@@ -10,7 +10,6 @@ import (
 )
 
 func VotePosts(w http.ResponseWriter, r *http.Request) {
-
 	postID := chi.URLParam(r, "postID")
 	userID := r.Context().Value("user_id").(int)
 
@@ -28,27 +27,29 @@ func VotePosts(w http.ResponseWriter, r *http.Request) {
 	if req.VoteType == 0 {
 		db.DB.Exec("DELETE FROM votes WHERE post_id = $1 AND user_id = $2", postID, userID)
 	} else {
-		db.DB.Exec("INSERT INTO votes (post_id, user_id, vote_type) VALUES ($1, $2, $3)",
+		_, err := db.DB.Exec(`
+			INSERT INTO votes (post_id, user_id, vote_type) 
+			VALUES ($1, $2, $3)
+			ON CONFLICT (user_id, post_id) DO UPDATE SET vote_type = EXCLUDED.vote_type`,
 			postID, userID, req.VoteType)
+		if err != nil {
+			db.DB.Exec("DELETE FROM votes WHERE post_id = $1 AND user_id = $2", postID, userID)
+			db.DB.Exec("INSERT INTO votes (post_id, user_id, vote_type) VALUES ($1, $2, $3)", postID, userID, req.VoteType)
+		}
 	}
 
 	var VoteCount int
-	db.DB.QueryRow("SELECT COALESCE(SUM(vote_type), 0) FROM votes WHERE post_id = $1",
-		postID).Scan(&VoteCount)
+	db.DB.QueryRow("SELECT COALESCE(SUM(vote_type), 0) FROM votes WHERE post_id = $1", postID).Scan(&VoteCount)
 
 	resp := models.VoteResponse{
 		VoteCount: VoteCount,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, "Error in writing response when voting", 500)
-	}
-
+	json.NewEncoder(w).Encode(resp)
 }
 
 func VoteComments(w http.ResponseWriter, r *http.Request) {
-
 	commentID := chi.URLParam(r, "commentID")
 	userID := r.Context().Value("user_id").(int)
 
@@ -64,23 +65,26 @@ func VoteComments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.VoteType == 0 {
-		db.DB.Exec("DELETE FROM votes WHERE comment_id = $1 AND user_id = $2",
-			commentID, userID)
+		db.DB.Exec("DELETE FROM votes WHERE comment_id = $1 AND user_id = $2", commentID, userID)
 	} else {
-		db.DB.Exec("INSERT INTO votes (comment_id, user_id, vote_type) VALUES ($1, $2, $3)",
+		_, err := db.DB.Exec(`
+			INSERT INTO votes (comment_id, user_id, vote_type) 
+			VALUES ($1, $2, $3)
+			ON CONFLICT (user_id, comment_id) DO UPDATE SET vote_type = EXCLUDED.vote_type`,
 			commentID, userID, req.VoteType)
+		if err != nil {
+			db.DB.Exec("DELETE FROM votes WHERE comment_id = $1 AND user_id = $2", commentID, userID)
+			db.DB.Exec("INSERT INTO votes (comment_id, user_id, vote_type) VALUES ($1, $2, $3)", commentID, userID, req.VoteType)
+		}
 	}
 
 	var VoteCount int
-	db.DB.QueryRow("SELECT COALESCE(SUM(vote_type), 0) FROM votes WHERE comment_id = $1",
-		commentID).Scan(&VoteCount)
+	db.DB.QueryRow("SELECT COALESCE(SUM(vote_type), 0) FROM votes WHERE comment_id = $1", commentID).Scan(&VoteCount)
 
 	resp := models.VoteResponse{
 		VoteCount: VoteCount,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, "Error in writing response when voting", 500)
-	}
+	json.NewEncoder(w).Encode(resp)
 }

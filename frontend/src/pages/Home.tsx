@@ -1,30 +1,54 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+    Container,
+    Typography,
+    TextField,
+    Button,
+    Card,
+    CardContent,
+    Box,
+    IconButton,
+    Stack,
+    InputAdornment,
+    Paper,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { colors } from '../theme/colors';
 import { apiFetch } from '../services/api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { formatTimeAgo } from '../utils/timeAgo';
+import Avatar from '../components/Avatar';
 
 interface Topic {
     id: number;
     title: string;
     user_id: number;
+    username: string;
     time_created: string;
 }
 
 function Home() {
     const [topics, setTopics] = useState<Topic[]>([]);
     const [title, setTitle] = useState("");
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [editTitle, setEditTitle] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const { isLoggedIn, user } = useAuth();
     const currentUserID = user?.id;
 
+    // Dialog states
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [topicToDelete, setTopicToDelete] = useState<number | null>(null);
+
     useEffect(() => {
-        fetch('http://localhost:8080/topics')
-            .then(response => response.json())
+        apiFetch('/topics')
+            .then(res => res.json())
             .then(data => setTopics(data || []))
             .catch(error => console.error("Error fetching topics", error));
     }, []);
@@ -44,6 +68,7 @@ function Home() {
                 id: data.id,
                 title: title,
                 user_id: currentUserID || 0,
+                username: user?.username || "Guest",
                 time_created: "Just Now",
             };
             setTopics([...topics, newTopic]);
@@ -52,199 +77,222 @@ function Home() {
     }
 
     async function handleDelete(topicID: number) {
-        if (!confirm("Are you sure you want to delete this topic?")) return;
-
         await apiFetch(`/topics/${topicID}`, {
             method: 'DELETE',
         });
 
         setTopics(topics.filter(topic => topic.id !== topicID));
-    }
-
-    async function handleEdit(topicId: number) {
-        if (!editTitle.trim()) return;
-
-        const response = await apiFetch(`/topics/${topicId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ title: editTitle }),
-        });
-
-        if (response.ok) {
-            setTopics(topics.map(t =>
-                t.id === topicId ? { ...t, title: editTitle } : t
-            ));
-            setEditingId(null);
-            setEditTitle("");
-        }
+        setDeleteDialogOpen(false);
     }
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            backgroundColor: colors.background,
-            fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        <Box sx={{ 
+            minHeight: '100vh', 
+            pb: 6, 
+            bgcolor: '#FFFFFF',
+            backgroundImage: `
+                linear-gradient(rgba(229, 231, 235, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(229, 231, 235, 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px',
         }}>
             <Navbar />
 
-            <main style={{ maxWidth: 800, margin: '0 auto', padding: '100px 40px 40px 40px' }}>
-                <h2 style={{ color: colors.text, fontSize: 28, fontWeight: 700, marginBottom: 24 }}>
-                    Forum Topics
-                </h2>
+            <Box
+                sx={{
+                    pt: 18,
+                    pb: 6,
+                    mb: 4,
+                }}
+            >
+                <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+                    <Stack spacing={2} alignItems="center" textAlign="center">
+                        <Typography variant="h2" sx={{ fontWeight: 900, color: colors.text, letterSpacing: '-0.02em', fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
+                            Welcome to{' '}
+                            <Box component="span" sx={{ color: colors.text }}>Sq</Box>
+                            <Box component="span" sx={{ color: colors.primary }}>U</Box>
+                            <Box component="span" sx={{ color: colors.text }}>are</Box>
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: colors.muted, maxWidth: '600px', lineHeight: 1.6, fontWeight: 500 }}>
+                            Great to see you back, {user?.username}! Ready to join the conversation?
+                        </Typography>
+                    </Stack>
+                </Container>
+            </Box>
 
-                <div style={{ marginBottom: 24 }}>
-                    <input
-                        type="text"
-                        placeholder="Search topics..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            borderRadius: 12,
-                            border: `1px solid ${colors.border}`,
-                            fontSize: 16,
-                            backgroundColor: '#fff',
-                            boxSizing: 'border-box',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                        }}
-                    />
-                </div>
+            <Container maxWidth="md">
+                <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ sx: { borderRadius: '16px', p: 1 } }}>
+                    <DialogTitle sx={{ fontWeight: 800 }}>Delete Topic?</DialogTitle>
+                    <DialogContent>
+                        <Typography color="text.secondary">
+                            This will permanently remove this topic and all discussions within it.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: colors.text }}>Cancel</Button>
+                        <Button
+                            onClick={() => topicToDelete && handleDelete(topicToDelete)}
+                            variant="contained"
+                            sx={{ borderRadius: '10px', bgcolor: colors.error }}
+                        >
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 4, color: colors.text }}>
+                    Explore Discussions
+                </Typography>
+
+                {/* Search Bar */}
+                <TextField
+                    fullWidth
+                    placeholder="Search topics..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    sx={{
+                        mb: 4,
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '16px',
+                            bgcolor: '#fff',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                            border: 'none',
+                            '&.Mui-focused': {
+                                boxShadow: '0 0 0 2px #000',
+                            }
+                        },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                            border: 'none'
+                        }
+                    }}
+                    slotProps={{
+                        input: {
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon color="action" />
+                                </InputAdornment>
+                            ),
+                        },
+                    }}
+                />
 
                 {isLoggedIn && (
-                    <form onSubmit={handleSubmit} style={{ marginBottom: 32 }}>
-                        <div style={{ display: 'flex', gap: 12 }}>
-                            <input
-                                type="text"
-                                placeholder="Start a new discussion..."
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                style={{
-                                    flex: 1,
-                                    padding: 12,
-                                    borderRadius: 8,
-                                    border: `1px solid ${colors.border}`,
-                                    fontSize: 16,
-                                    boxSizing: 'border-box',
-                                }}
-                            />
-                            <button
-                                type="submit"
-                                style={{
-                                    padding: '12px 24px',
-                                    borderRadius: 8,
-                                    backgroundColor: colors.primary,
-                                    color: '#fff',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Create
-                            </button>
-                        </div>
-                    </form>
+                    <Paper
+                        component="form"
+                        onSubmit={handleSubmit}
+                        sx={{
+                            p: 2,
+                            mb: 5,
+                            borderRadius: '16px',
+                            display: 'flex',
+                            gap: 2,
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+                            border: '1px solid transparent',
+                            transition: 'all 0.2s',
+                            '&:focus-within': {
+                                border: '2px solid #000',
+                                boxShadow: 'none',
+                            }
+                        }}
+                    >
+                        <TextField
+                            fullWidth
+                            variant="standard"
+                            placeholder="Start a new discussion..."
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            InputProps={{ disableUnderline: true }}
+                            sx={{ px: 1 }}
+                        />
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={!title.trim()}
+                            startIcon={<AddIcon />}
+                            sx={{
+                                borderRadius: '12px',
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                px: 3,
+                                bgcolor: colors.primary
+                            }}
+                        >
+                            Create
+                        </Button>
+                    </Paper>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Stack spacing={2}>
                     {topics
                         .filter(topic => topic.title.toLowerCase().includes(searchQuery.toLowerCase()))
                         .map(topic => (
-                            <div
+                            <Card
                                 key={topic.id}
-                                style={{
-                                    padding: 20,
-                                    borderRadius: 12,
-                                    backgroundColor: '#FFFFFF',
-                                    border: `1px solid ${colors.border}`,
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
+                                component={RouterLink}
+                                to={`/topics/${topic.id}/posts`}
+                                sx={{
+                                    borderRadius: '16px',
+                                    border: 'none',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                    textDecoration: 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease-in-out',
+                                    '&:hover': {
+                                        boxShadow: '0 12px 24px rgba(0,0,0,0.15)',
+                                        transform: 'translateY(-4px)',
+                                    }
                                 }}
                             >
-                                {editingId === topic.id ? (
-                                    <div style={{ flex: 1, display: 'flex', gap: 8, marginRight: 16 }}>
-                                        <input
-                                            type="text"
-                                            value={editTitle}
-                                            onChange={(e) => setEditTitle(e.target.value)}
-                                            style={{
-                                                flex: 1,
-                                                padding: 8,
-                                                borderRadius: 4,
-                                                border: `1px solid ${colors.border}`,
-                                            }}
-                                        />
-                                        <button
-                                            onClick={() => handleEdit(topic.id)}
-                                            style={{
-                                                padding: '4px 12px',
-                                                borderRadius: 4,
-                                                backgroundColor: colors.success,
-                                                color: '#fff',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                            }}
-                                        >
-                                            Save
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <Link
-                                        to={`/topics/${topic.id}/posts`}
-                                        style={{
-                                            textDecoration: 'none',
-                                            flex: 1,
-                                        }}
-                                    >
-                                        <h3 style={{ color: colors.text, fontSize: 18, fontWeight: 600, margin: 0 }}>
-                                            {topic.title}
-                                        </h3>
-                                        <p style={{ color: colors.muted, fontSize: 14, margin: '8px 0 0 0' }}>
-                                            {formatTimeAgo(topic.time_created)}
-                                        </p>
-                                    </Link>
-                                )}
+                                <CardContent sx={{ p: '24px !important' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
+                                            <Avatar username={topic.username || "Guest"} size={40} />
+                                            <Box>
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: '1.15rem',
+                                                        fontWeight: 700,
+                                                        color: colors.text,
+                                                        mb: 0.5
+                                                    }}
+                                                >
+                                                    {topic.title}
+                                                </Typography>
+                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                    <Typography variant="caption" sx={{ color: colors.text, fontWeight: 600 }}>
+                                                        {topic.username || "Member"}
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: colors.muted }}>
+                                                        •
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: colors.muted }}>
+                                                        {formatTimeAgo(topic.time_created)}
+                                                    </Typography>
+                                                </Stack>
+                                            </Box>
+                                        </Box>
 
-                                {currentUserID === topic.user_id && (
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                        <button
-                                            onClick={() => {
-                                                setEditingId(topic.id);
-                                                setEditTitle(topic.title);
-                                            }}
-                                            style={{
-                                                padding: '8px 16px',
-                                                borderRadius: 8,
-                                                backgroundColor: colors.muted,
-                                                color: '#fff',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                fontWeight: 500,
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(topic.id)}
-                                            style={{
-                                                padding: '8px 16px',
-                                                borderRadius: 8,
-                                                backgroundColor: colors.error,
-                                                color: '#fff',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                fontWeight: 500,
-                                            }}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                                        {currentUserID === topic.user_id && (
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setTopicToDelete(topic.id);
+                                                    setDeleteDialogOpen(true);
+                                                }}
+                                                sx={{ color: colors.muted, '&:hover': { color: colors.error, bgcolor: '#fef2f2' } }}
+                                            >
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        )}
+                                    </Box>
+                                </CardContent>
+                            </Card>
                         ))}
-                </div>
-            </main>
-        </div>
+                </Stack>
+            </Container>
+        </Box>
     );
 }
 

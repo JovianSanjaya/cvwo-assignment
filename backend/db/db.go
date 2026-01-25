@@ -95,7 +95,9 @@ func CreateTables() {
 		post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
 		comment_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,	
 		vote_type INTEGER NOT NULL,
-		time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+		time_created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(user_id, post_id),
+		UNIQUE(user_id, comment_id)
 	);`
 
 	_, errVotes := DB.Exec(votesQuery)

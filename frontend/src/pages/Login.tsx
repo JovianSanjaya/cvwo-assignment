@@ -1,5 +1,18 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import {
+    Typography,
+    TextField,
+    Button,
+    Box,
+    Paper,
+    Alert,
+    Link as MUILink,
+    InputAdornment,
+    IconButton
+} from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { apiFetch } from "../services/api";
 import { colors } from "../theme/colors";
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +21,7 @@ function Login() {
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const { login } = useAuth();
 
@@ -23,107 +37,132 @@ function Login() {
         if (response.ok) {
             const data = await response.json();
             login(data.token);
-            navigate("/");
+            navigate("/home");
         } else {
             setError("Invalid username or password");
         }
     }
 
     return (
-        <div style={{
+        <Box sx={{
             minHeight: '100vh',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: colors.background,
+            p: 2,
+            bgcolor: '#FFFFFF',
+            backgroundImage: `
+                linear-gradient(rgba(229, 231, 235, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(229, 231, 235, 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px',
         }}>
-            <div style={{
-                width: 400,
-                padding: 40,
-                borderRadius: 25,
+            <Paper elevation={0} sx={{
+                width: '100%',
+                maxWidth: 400,
+                padding: { xs: 3, sm: 5 },
+                borderRadius: '32px',
                 backgroundColor: '#FFFFFF',
                 border: `1px solid ${colors.border}`,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
             }}>
                 {/* Logo */}
-                <h1 style={{
-                    fontSize: 40,
-                    fontWeight: 800,
-                    marginBottom: 16,
-                    letterSpacing: -1,
+                <Typography variant="h3" sx={{
+                    fontWeight: 900,
+                    mb: 1,
+                    letterSpacing: -1.5,
                     textAlign: 'center',
                 }}>
-                    <span style={{ color: colors.text }}>Sq</span>
-                    <span style={{ color: colors.primary }}>U</span>
-                    <span style={{ color: colors.text }}>are</span>
-                </h1>
+                    <Box component="span" sx={{ color: colors.text }}>Sq</Box>
+                    <Box component="span" sx={{ color: colors.primary }}>U</Box>
+                    <Box component="span" sx={{ color: colors.text }}>are</Box>
+                </Typography>
 
-                <h2 style={{
+                <Typography variant="h5" sx={{
                     color: colors.text,
-                    fontSize: 28,
-                    fontWeight: 700,
-                    marginBottom: 32,
+                    fontWeight: 800,
+                    mb: 4,
                     textAlign: 'center',
+                    opacity: 0.9
                 }}>
                     Welcome back
-                </h2>
+                </Typography>
 
-                {error && <p style={{ color: colors.error, marginBottom: 16 }}>{error}</p>}
+                {error && (
+                    <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>
+                        {error}
+                    </Alert>
+                )}
 
-                <form onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        placeholder="Username"
+                <Box component="form" onSubmit={handleSubmit}>
+                    <TextField
+                        fullWidth
+                        label="Username"
+                        variant="outlined"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: 12,
-                            marginBottom: 16,
-                            borderRadius: 8,
-                            border: `1px solid ${colors.border}`,
-                            fontSize: 16,
-                            boxSizing: 'border-box',
+                        sx={{
+                            mb: 2,
+                            '& .MuiOutlinedInput-root': { borderRadius: '12px' }
                         }}
                     />
-                    <input
-                        type="password"
-                        placeholder="Password"
+                    <TextField
+                        fullWidth
+                        label="Password"
+                        type={showPassword ? 'text' : 'password'}
+                        variant="outlined"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: 12,
-                            marginBottom: 24,
-                            borderRadius: 8,
-                            border: `1px solid ${colors.border}`,
-                            fontSize: 16,
-                            boxSizing: 'border-box',
+                        sx={{
+                            mb: 4,
+                            '& .MuiOutlinedInput-root': { borderRadius: '12px' }
+                        }}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
                         }}
                     />
-                    <button
+                    <Button
                         type="submit"
-                        style={{
-                            width: '100%',
-                            padding: 12,
-                            borderRadius: 8,
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                            padding: '12px',
+                            borderRadius: '12px',
                             backgroundColor: colors.primary,
-                            color: '#fff',
-                            fontSize: 16,
-                            fontWeight: 600,
-                            border: 'none',
-                            cursor: 'pointer',
-                            boxSizing: 'border-box',
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                            textTransform: 'none',
+                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                            '&:hover': {
+                                backgroundColor: '#2563EB',
+                                boxShadow: '0 6px 16px rgba(59, 130, 246, 0.4)',
+                            },
+                            '&:active': {
+                                backgroundColor: '#60A5FA',
+                            }
                         }}
                     >
-                        Login
-                    </button>
-                </form>
-                <p style={{ textAlign: 'center', marginTop: 24, color: colors.muted }}>
-                    Don't have an account? <Link to="/register" style={{ color: colors.primary }}>Register</Link>
-                </p>
-            </div>
-        </div>
+                        Sign In
+                    </Button>
+                </Box>
+
+                <Typography sx={{ textAlign: 'center', mt: 4, color: colors.muted, fontSize: '0.9rem' }}>
+                    New to SqUare?{' '}
+                    <MUILink component={RouterLink} to="/register" sx={{ color: colors.primary, fontWeight: 700, textDecoration: 'none' }}>
+                        Create an account
+                    </MUILink>
+                </Typography>
+            </Paper>
+        </Box>
     );
 }
 

@@ -8,6 +8,8 @@ type Comments struct {
 	PostID      int       `json:"post_id"`
 	UserID      int       `json:"user_id"`
 	Username    string    `json:"username"`
+	VoteCount   int       `json:"vote_count"`
+	UserVote    int       `json:"user_vote"`
 	TimeCreated time.Time `json:"time_created"`
 }
 
