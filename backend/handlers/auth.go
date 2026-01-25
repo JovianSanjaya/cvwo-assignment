@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -12,7 +13,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+func getJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		fmt.Println("JWT Secret not set")
+	}
+	return []byte(secret)
+}
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
@@ -63,7 +70,7 @@ func generateToken(userID int) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(getJWTSecret())
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {

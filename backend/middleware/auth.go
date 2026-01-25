@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -10,7 +11,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+func getJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		fmt.Println("WARNING: JWT_SECRET not set in environment variables")
+		panic("JWT_SECRET environment variable is required")
+	}
+	return []byte(secret)
+}
 
 type Claims struct {
 	UserID int
@@ -19,7 +27,7 @@ type Claims struct {
 
 func ValidateToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return getJWTSecret(), nil
 	})
 
 	if err != nil || !token.Valid {

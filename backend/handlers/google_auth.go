@@ -147,17 +147,12 @@ func GoogleAuth(w http.ResponseWriter, r *http.Request) {
 		user.Role = "user"
 	}
 
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "default-secret-key"
-	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
 		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(jwtSecret))
+	tokenString, err := token.SignedString(getJWTSecret())
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
